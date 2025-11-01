@@ -14,6 +14,7 @@ package extension URLRequest {
 
 		request.httpMethod = "POST"
 		request.setValue("Bearer \(ephemeralKey)", forHTTPHeaderField: "Authorization")
+		request.setValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
 
 		return request
 	}
