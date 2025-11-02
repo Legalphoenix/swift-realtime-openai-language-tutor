@@ -296,7 +296,7 @@ import MetaCodable
 		part: Item.ContentPart
 	)
 
-	/// Returned when the text value of an `outputText` content part is updated.
+	/// Returned when the text value of an output text content part is updated.
 	///
 	/// - Parameter eventId: The unique ID of the server event.
 	/// - Parameter responseId: The ID of the Response.
@@ -314,7 +314,17 @@ import MetaCodable
 		delta: String
 	)
 
-	/// Returned when the text value of a "text" content part is done streaming. Also emitted when a Response is interrupted, incomplete, or cancelled.
+	@CodedAs("response.output_text.delta")
+	case responseOutputTextDelta(
+		eventId: String,
+		responseId: String,
+		itemId: String,
+		outputIndex: Int,
+		contentIndex: Int,
+		delta: String
+	)
+
+	/// Returned when the text value of an output text content part is done streaming. Also emitted when a Response is interrupted, incomplete, or cancelled.
 	///
 	/// - Parameter eventId: The unique ID of the server event.
 	/// - Parameter responseId: The ID of the Response.
@@ -332,6 +342,16 @@ import MetaCodable
 		text: String
 	)
 
+	@CodedAs("response.output_text.done")
+	case responseOutputTextDone(
+		eventId: String,
+		responseId: String,
+		itemId: String,
+		outputIndex: Int,
+		contentIndex: Int,
+		text: String
+	)
+
 	/// Returned when the model-generated transcription of audio output is updated.
 	///
 	/// - Parameter eventId: The unique ID of the server event.
@@ -340,8 +360,18 @@ import MetaCodable
 	/// - Parameter outputIndex: The index of the output item in the Response.
 	/// - Parameter contentIndex: The index of the content part in the item's content array.
 	/// - Parameter delta: The transcript delta.
-	@CodedAs("response.output_audio_transcript.delta")
+	@CodedAs("response.audio_transcript.delta")
 	case responseAudioTranscriptDelta(
+		eventId: String,
+		responseId: String,
+		itemId: String,
+		outputIndex: Int,
+		contentIndex: Int,
+		delta: String
+	)
+
+	@CodedAs("response.output_audio_transcript.delta")
+	case responseOutputAudioTranscriptDelta(
 		eventId: String,
 		responseId: String,
 		itemId: String,
@@ -358,8 +388,18 @@ import MetaCodable
 	/// - Parameter outputIndex: The index of the output item in the Response.
 	/// - Parameter contentIndex: The index of the content part in the item's content array.
 	/// - Parameter transcript: The final transcript of the audio.
-	@CodedAs("response.output_audio_transcript.done")
+	@CodedAs("response.audio_transcript.done")
 	case responseAudioTranscriptDone(
+		eventId: String,
+		responseId: String,
+		itemId: String,
+		outputIndex: Int,
+		contentIndex: Int,
+		transcript: String
+	)
+
+	@CodedAs("response.output_audio_transcript.done")
+	case responseOutputAudioTranscriptDone(
 		eventId: String,
 		responseId: String,
 		itemId: String,
@@ -554,10 +594,14 @@ extension ServerEvent: Identifiable {
 			case let .responseOutputItemDone(id, _, _, _): id
 			case let .responseContentPartAdded(id, _, _, _, _, _): id
 			case let .responseContentPartDone(id, _, _, _, _, _): id
-			case let .responseTextDelta(id, _, _, _, _, _): id
-			case let .responseTextDone(id, _, _, _, _, _): id
-			case let .responseAudioTranscriptDelta(id, _, _, _, _, _): id
-			case let .responseAudioTranscriptDone(id, _, _, _, _, _): id
+		case let .responseTextDelta(id, _, _, _, _, _): id
+		case let .responseOutputTextDelta(id, _, _, _, _, _): id
+		case let .responseTextDone(id, _, _, _, _, _): id
+		case let .responseOutputTextDone(id, _, _, _, _, _): id
+		case let .responseAudioTranscriptDelta(id, _, _, _, _, _): id
+		case let .responseOutputAudioTranscriptDelta(id, _, _, _, _, _): id
+		case let .responseAudioTranscriptDone(id, _, _, _, _, _): id
+		case let .responseOutputAudioTranscriptDone(id, _, _, _, _, _): id
 			case let .responseOutputAudioDelta(id, _, _, _, _, _): id
 			case let .responseOutputAudioDone(id, _, _, _, _): id
 			case let .responseFunctionCallArgumentsDelta(id, _, _, _, _, _): id

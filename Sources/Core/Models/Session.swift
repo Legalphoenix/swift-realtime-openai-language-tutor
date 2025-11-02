@@ -2,7 +2,7 @@ import Foundation
 import MetaCodable
 import HelperCoders
 
-@Codable public struct Session: Equatable, Hashable, Sendable {
+public struct Session: Equatable, Hashable, Sendable {
 	public enum Modality: String, Equatable, Hashable, Codable, Sendable {
 		case text, audio
 	}
@@ -317,17 +317,95 @@ import HelperCoders
 	/// Tools available to the model.
 	public var tools: [Tool]?
 
-	public init(id: String? = nil, audio: Audio, instructions: String, maxResponseOutputTokens: MaxResponseOutputTokens? = nil, modalities: [Modality]? = nil, model: Model, prompt: Prompt? = nil, temperature: Double? = nil, toolChoice: Tool.Choice? = nil, tools: [Tool]? = nil) {
-		self.id = id
-		self.tools = tools
-		self.model = model
-		self.audio = audio
-		self.prompt = prompt
-		self.toolChoice = toolChoice
-		self.modalities = modalities
-		self.temperature = temperature
-		self.instructions = instructions
-		self.maxResponseOutputTokens = maxResponseOutputTokens
+public init(id: String? = nil, audio: Audio, instructions: String, maxResponseOutputTokens: MaxResponseOutputTokens? = nil, modalities: [Modality]? = nil, model: Model, prompt: Prompt? = nil, temperature: Double? = nil, toolChoice: Tool.Choice? = nil, tools: [Tool]? = nil) {
+	self.id = id
+	self.tools = tools
+	self.model = model
+	self.audio = audio
+	self.prompt = prompt
+	self.toolChoice = toolChoice
+	self.modalities = modalities
+	self.temperature = temperature
+	self.instructions = instructions
+	self.maxResponseOutputTokens = maxResponseOutputTokens
+}
+}
+
+// MARK: Codable support
+
+extension Session: Codable {
+	private enum CodingKeys: String, CodingKey {
+		case type
+		case id
+		case audio
+		case instructions
+		case maxResponseOutputTokens = "max_response_output_tokens"
+		case modalities
+		case outputModalities = "output_modalities"
+		case model
+		case prompt
+		case temperature
+		case toolChoice = "tool_choice"
+		case tools
+		// Flattened GA fields
+		case voice
+		case outputAudioFormat = "output_audio_format"
+		case speed
+		case turnDetection = "turn_detection"
+		case inputAudioFormat = "input_audio_format"
+		case inputAudioNoiseReduction = "input_audio_noise_reduction"
+		case inputAudioTranscription = "input_audio_transcription"
+	}
+
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+
+		id = try container.decodeIfPresent(String.self, forKey: .id)
+		instructions = try container.decode(String.self, forKey: .instructions)
+		maxResponseOutputTokens = try container.decodeIfPresent(MaxResponseOutputTokens.self, forKey: .maxResponseOutputTokens)
+		modalities = try container.decodeIfPresent([Modality].self, forKey: .modalities) ?? container.decodeIfPresent([Modality].self, forKey: .outputModalities)
+		model = try container.decode(Model.self, forKey: .model)
+		prompt = try container.decodeIfPresent(Prompt.self, forKey: .prompt)
+		temperature = try container.decodeIfPresent(Double.self, forKey: .temperature)
+		toolChoice = try container.decodeIfPresent(Tool.Choice.self, forKey: .toolChoice)
+		tools = try container.decodeIfPresent([Tool].self, forKey: .tools)
+
+		if let nestedAudio = try container.decodeIfPresent(Audio.self, forKey: .audio) {
+			audio = nestedAudio
+			return
+		}
+
+		// Fallback for GA flattening
+		let inputFormatType = try container.decodeIfPresent(String.self, forKey: .inputAudioFormat)
+		let outputFormatType = try container.decodeIfPresent(String.self, forKey: .outputAudioFormat)
+		let noiseReduction = try container.decodeIfPresent(Audio.Input.NoiseReduction.self, forKey: .inputAudioNoiseReduction)
+		let transcription = try container.decodeIfPresent(Audio.Input.Transcription.self, forKey: .inputAudioTranscription)
+		let turnDetection = try container.decodeIfPresent(Audio.Input.TurnDetection.self, forKey: .turnDetection)
+		let voice = try container.decodeIfPresent(Voice.self, forKey: .voice) ?? .marin
+		let speed = try container.decodeIfPresent(Double.self, forKey: .speed) ?? 1.0
+
+		let inputFormat = Audio.AudioFormat(rate: 24000, type: inputFormatType ?? "pcm16")
+		let outputFormat = Audio.AudioFormat(rate: 24000, type: outputFormatType ?? "pcm16")
+
+		audio = Audio(
+			input: .init(format: inputFormat, noiseReduction: noiseReduction, transcription: transcription, turnDetection: turnDetection),
+			output: .init(voice: voice, speed: speed, format: outputFormat)
+		)
+	}
+
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(type, forKey: .type)
+		try container.encodeIfPresent(id, forKey: .id)
+		try container.encode(audio, forKey: .audio)
+		try container.encode(instructions, forKey: .instructions)
+		try container.encodeIfPresent(maxResponseOutputTokens, forKey: .maxResponseOutputTokens)
+		try container.encodeIfPresent(modalities, forKey: .outputModalities)
+		try container.encode(model, forKey: .model)
+		try container.encodeIfPresent(prompt, forKey: .prompt)
+		try container.encodeIfPresent(temperature, forKey: .temperature)
+		try container.encodeIfPresent(toolChoice, forKey: .toolChoice)
+		try container.encodeIfPresent(tools, forKey: .tools)
 	}
 }
 

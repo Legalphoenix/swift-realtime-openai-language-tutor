@@ -201,28 +201,32 @@ private extension Conversation {
 				updateEvent(id: itemId) { message in
 					message.content[contentIndex] = .init(from: part)
 				}
-			case let .responseTextDelta(_, _, itemId, _, contentIndex, delta):
-				updateEvent(id: itemId) { message in
-					guard case let .text(text) = message.content[contentIndex] else { return }
+		case let .responseTextDelta(_, _, itemId, _, contentIndex, delta),
+			 let .responseOutputTextDelta(_, _, itemId, _, contentIndex, delta):
+			updateEvent(id: itemId) { message in
+				guard case let .text(text) = message.content[contentIndex] else { return }
 
-					message.content[contentIndex] = .text(text + delta)
-				}
-			case let .responseTextDone(_, _, itemId, _, contentIndex, text):
-				updateEvent(id: itemId) { message in
-					message.content[contentIndex] = .text(text)
-				}
-			case let .responseAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta):
-				updateEvent(id: itemId) { message in
-					guard case let .audio(audio) = message.content[contentIndex] else { return }
+				message.content[contentIndex] = .text(text + delta)
+			}
+		case let .responseTextDone(_, _, itemId, _, contentIndex, text),
+			 let .responseOutputTextDone(_, _, itemId, _, contentIndex, text):
+			updateEvent(id: itemId) { message in
+				message.content[contentIndex] = .text(text)
+			}
+		case let .responseAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta),
+			 let .responseOutputAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta):
+			updateEvent(id: itemId) { message in
+				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
-					message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: (audio.transcript ?? "") + delta))
-				}
-			case let .responseAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript):
-				updateEvent(id: itemId) { message in
-					guard case let .audio(audio) = message.content[contentIndex] else { return }
+				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: (audio.transcript ?? "") + delta))
+			}
+		case let .responseAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript),
+			 let .responseOutputAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript):
+			updateEvent(id: itemId) { message in
+				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
-					message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: transcript))
-				}
+				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: transcript))
+			}
 			case let .responseOutputAudioDelta(_, _, itemId, _, contentIndex, delta):
 				updateEvent(id: itemId) { message in
 					guard case let .audio(audio) = message.content[contentIndex] else { return }

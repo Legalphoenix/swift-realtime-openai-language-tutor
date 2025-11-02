@@ -388,10 +388,10 @@ extension Item.ContentPart: Codable {
 		let type = try container.decode(String.self, forKey: .type)
 
 		switch type {
-			case "text":
+		case "text", "output_text":
 				let container = try decoder.container(keyedBy: Text.CodingKeys.self)
 				self = try .text(container.decode(String.self, forKey: .text))
-			case "audio":
+		case "audio", "output_audio":
 				self = try .audio(Item.Audio(from: decoder))
 			default:
 				throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown content type: \(type)")
@@ -434,13 +434,13 @@ extension Item.Message.Content: Codable {
 		let type = try container.decode(String.self, forKey: .type)
 
 		switch type {
-			case "text":
+		case "text", "output_text":
 				let container = try decoder.container(keyedBy: Text.CodingKeys.self)
 				self = try .text(container.decode(String.self, forKey: .text))
 			case "input_text":
 				let container = try decoder.container(keyedBy: Text.CodingKeys.self)
 				self = try .inputText(container.decode(String.self, forKey: .text))
-			case "output_audio":
+		case "audio", "output_audio":
 				self = try .audio(Item.Audio(from: decoder))
 			case "input_audio":
 				self = try .inputAudio(Item.Audio(from: decoder))
@@ -460,7 +460,7 @@ extension Item.Message.Content: Codable {
 				try container.encode(text, forKey: .text)
 				try container.encode("input_text", forKey: .type)
 			case let .audio(audio):
-				try container.encode("output_audio", forKey: .type)
+				try container.encode("audio", forKey: .type)
 				try container.encode(audio.audio, forKey: .audio)
 				try container.encode(audio.transcript, forKey: .transcript)
 			case let .inputAudio(audio):

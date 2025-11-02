@@ -15,7 +15,6 @@ public extension RealtimeAPI {
 		var request = URLRequest(url: URL(string: "wss://api.openai.com/v1/realtime")!.appending(queryItems: [
 			URLQueryItem(name: "model", value: model.rawValue),
 		]))
-		request.addValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
 		request.addValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
 
 		return webSocket(connectingTo: request)
