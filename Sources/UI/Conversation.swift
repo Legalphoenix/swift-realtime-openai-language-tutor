@@ -221,6 +221,7 @@ private extension Conversation {
 				let updatedTranscript = (audio.transcript ?? "") + delta
 				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: updatedTranscript))
 				print("Transcript delta ->", updatedTranscript)
+				assertionFailure("Transcript delta breakpoint")
 			}
 		case let .responseAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript),
 			 let .responseOutputAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript):
