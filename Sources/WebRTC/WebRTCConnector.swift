@@ -167,8 +167,15 @@ private extension WebRTCConnector {
 
 		let (data, response) = try await URLSession.shared.data(for: request)
 
-		guard let response = response as? HTTPURLResponse, response.statusCode == 201, let remoteSdp = String(data: data, encoding: .utf8) else {
-			if (response as? HTTPURLResponse)?.statusCode == 401 { throw WebRTCError.invalidEphemeralKey }
+		guard let httpResponse = response as? HTTPURLResponse else {
+			throw WebRTCError.badServerResponse(response)
+		}
+
+		guard httpResponse.statusCode == 201, let remoteSdp = String(data: data, encoding: .utf8) else {
+			if httpResponse.statusCode == 401 { throw WebRTCError.invalidEphemeralKey }
+			if let body = String(data: data, encoding: .utf8), !body.isEmpty {
+				print("Realtime connect failed (\(httpResponse.statusCode)): \(body)")
+			}
 			throw WebRTCError.badServerResponse(response)
 		}
 
