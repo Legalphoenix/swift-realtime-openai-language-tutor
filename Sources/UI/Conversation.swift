@@ -216,6 +216,7 @@ private extension Conversation {
 		case let .responseAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta),
 			 let .responseOutputAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta):
 			updateEvent(id: itemId) { message in
+				print("Before delta content:", message.content)
 				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
 				let updatedTranscript = (audio.transcript ?? "") + delta
