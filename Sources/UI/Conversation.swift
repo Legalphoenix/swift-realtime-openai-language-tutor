@@ -176,8 +176,10 @@ private extension Conversation {
 				if let sessionUpdateCallback { try updateSession(withChanges: sessionUpdateCallback) }
 			case let .sessionUpdated(_, session):
 				self.session = session
-			case let .conversationItemCreated(_, item, _):
-				entries.append(item)
+			case let .conversationItemCreated(_, item, previousItemId):
+				insertItem(item, after: previousItemId)
+			case let .conversationItemAdded(_, item, previousItemId):
+				insertItem(item, after: previousItemId)
 			case let .conversationItemDeleted(_, itemId):
 				entries.removeAll { $0.id == itemId }
 			case let .conversationItemInputAudioTranscriptionCompleted(_, itemId, contentIndex, transcript, _, _):
@@ -193,6 +195,8 @@ private extension Conversation {
 				if id == nil {
 					id = response.conversationId
 				}
+			case let .responseOutputItemAdded(_, _, _, item):
+				insertItem(item, after: nil)
 			case let .responseContentPartAdded(_, _, itemId, _, contentIndex, part):
 				updateEvent(id: itemId) { message in
 					message.content.insert(.init(from: part), at: contentIndex)
@@ -262,6 +266,21 @@ private extension Conversation {
 					message = newMessage
 				}
 			default: break
+		}
+	}
+
+	func insertItem(_ item: Item, after previousItemId: String?) {
+		if let existingIndex = entries.firstIndex(where: { $0.id == item.id }) {
+			entries[existingIndex] = item
+			return
+		}
+
+		if let previousItemId,
+		   let previousIndex = entries.firstIndex(where: { $0.id == previousItemId }) {
+			let insertIndex = entries.index(after: previousIndex)
+			entries.insert(item, at: insertIndex)
+		} else {
+			entries.append(item)
 		}
 	}
 
