@@ -218,7 +218,9 @@ private extension Conversation {
 			updateEvent(id: itemId) { message in
 				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
-				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: (audio.transcript ?? "") + delta))
+				let updatedTranscript = (audio.transcript ?? "") + delta
+				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: updatedTranscript))
+				print("Transcript delta ->", updatedTranscript)
 			}
 		case let .responseAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript),
 			 let .responseOutputAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript):
@@ -226,6 +228,7 @@ private extension Conversation {
 				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
 				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: transcript))
+				print("Transcript done ->", transcript)
 			}
 			case let .responseOutputAudioDelta(_, _, itemId, _, contentIndex, delta):
 				updateEvent(id: itemId) { message in
