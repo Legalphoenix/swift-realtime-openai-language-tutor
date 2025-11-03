@@ -58,6 +58,35 @@ public struct Session: Equatable, Hashable, Sendable {
 	public struct AudioFormat: Equatable, Hashable, Codable, Sendable {
 		public var rate: Int
 		public var type: String
+
+		public init(rate: Int = 24_000, type: String) {
+			self.rate = rate
+			self.type = type
+		}
+
+		private enum CodingKeys: String, CodingKey {
+			case rate
+			case type
+		}
+
+		public init(from decoder: any Decoder) throws {
+			if let container = try? decoder.container(keyedBy: CodingKeys.self) {
+				let type = try container.decode(String.self, forKey: .type)
+				let rate = try container.decodeIfPresent(Int.self, forKey: .rate) ?? 24_000
+				self.init(rate: rate, type: type)
+				return
+			}
+
+			let singleValueContainer = try decoder.singleValueContainer()
+			let stringValue = try singleValueContainer.decode(String.self)
+			self.init(type: stringValue)
+		}
+
+		public func encode(to encoder: any Encoder) throws {
+			var container = encoder.container(keyedBy: CodingKeys.self)
+			try container.encode(rate, forKey: .rate)
+			try container.encode(type, forKey: .type)
+		}
 	}
 
 	/// Configuration for input and output audio.
@@ -376,16 +405,13 @@ extension Session: Codable {
 		}
 
 		// Fallback for GA flattening
-		let inputFormatType = try container.decodeIfPresent(String.self, forKey: .inputAudioFormat)
-		let outputFormatType = try container.decodeIfPresent(String.self, forKey: .outputAudioFormat)
+		let inputFormat = try container.decodeIfPresent(AudioFormat.self, forKey: .inputAudioFormat) ?? AudioFormat(type: "pcm16")
+		let outputFormat = try container.decodeIfPresent(AudioFormat.self, forKey: .outputAudioFormat) ?? AudioFormat(type: "pcm16")
 		let noiseReduction = try container.decodeIfPresent(Audio.Input.NoiseReduction.self, forKey: .inputAudioNoiseReduction)
 		let transcription = try container.decodeIfPresent(Audio.Input.Transcription.self, forKey: .inputAudioTranscription)
 		let turnDetection = try container.decodeIfPresent(Audio.Input.TurnDetection.self, forKey: .turnDetection)
 		let voice = try container.decodeIfPresent(Voice.self, forKey: .voice) ?? .marin
 		let speed = try container.decodeIfPresent(Double.self, forKey: .speed) ?? 1.0
-
-		let inputFormat = Audio.AudioFormat(rate: 24000, type: inputFormatType ?? "pcm16")
-		let outputFormat = Audio.AudioFormat(rate: 24000, type: outputFormatType ?? "pcm16")
 
 		audio = Audio(
 			input: .init(format: inputFormat, noiseReduction: noiseReduction, transcription: transcription, turnDetection: turnDetection),
