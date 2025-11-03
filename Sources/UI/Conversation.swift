@@ -267,6 +267,7 @@ private extension Conversation {
 
 	func updateEvent(id: String, modifying closure: (inout Item.Message) -> Void) {
 		guard let index = entries.firstIndex(where: { $0.id == id }), case var .message(message) = entries[index] else {
+			print("updateEvent missing message for id:", id)
 			return
 		}
 
