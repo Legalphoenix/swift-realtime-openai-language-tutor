@@ -220,13 +220,10 @@ private extension Conversation {
 		case let .responseAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta),
 			 let .responseOutputAudioTranscriptDelta(_, _, itemId, _, contentIndex, delta):
 			updateEvent(id: itemId) { message in
-				print("Before delta content:", message.content)
 				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
 				let updatedTranscript = (audio.transcript ?? "") + delta
 				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: updatedTranscript))
-				print("Transcript delta ->", updatedTranscript)
-				assertionFailure("Transcript delta breakpoint")
 			}
 		case let .responseAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript),
 			 let .responseOutputAudioTranscriptDone(_, _, itemId, _, contentIndex, transcript):
@@ -234,7 +231,6 @@ private extension Conversation {
 				guard case let .audio(audio) = message.content[contentIndex] else { return }
 
 				message.content[contentIndex] = .audio(.init(audio: audio.audio, transcript: transcript))
-				print("Transcript done ->", transcript)
 			}
 			case let .responseOutputAudioDelta(_, _, itemId, _, contentIndex, delta):
 				updateEvent(id: itemId) { message in
@@ -285,10 +281,7 @@ private extension Conversation {
 	}
 
 	func updateEvent(id: String, modifying closure: (inout Item.Message) -> Void) {
-		guard let index = entries.firstIndex(where: { $0.id == id }), case var .message(message) = entries[index] else {
-			print("updateEvent missing message for id:", id)
-			return
-		}
+		guard let index = entries.firstIndex(where: { $0.id == id }), case var .message(message) = entries[index] else { return }
 
 		closure(&message)
 
